@@ -23,6 +23,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run () {
     const productsCollection = client.db('salesBb').collection('products');
     const CategoriesCollection = client.db('salesBb').collection('categories');
+    const bookingCollection = client.db('salesBb').collection('bookings');
 
     app.get('/products', async(req, res) => {
         const query = {};
@@ -39,6 +40,14 @@ async function run () {
         const query = {category_id: id}
         const category = await productsCollection.find(query).toArray()
         res.send(category)
+    })
+
+    // booking collection area start
+    app.post('/bookings', async(req, res) => {
+        const booking = req.body;
+        console.log(booking)
+        const result = await bookingCollection.insertOne(booking);
+        res.send(result)
     })
 
 }

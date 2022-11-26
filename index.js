@@ -30,7 +30,14 @@ async function run () {
         const query = {};
         const products = await productsCollection.find(query).toArray();
         res.send(products)
+    });
+
+    app.post('/products', async(req, res) => {
+        const product = req.body;
+        const result = await productsCollection.insertOne(product);
+        res.send(result)
     })
+
     app.get('/categories', async(req, res) => {
         const query = {};
         const categories = await CategoriesCollection.find(query).toArray();
@@ -49,6 +56,18 @@ async function run () {
         console.log(booking)
         const result = await bookingCollection.insertOne(booking);
         res.send(result)
+    })
+
+    app.get('/bookings', async(req, res) => {
+        let query = {};
+        const email = req.query.email;
+        if(email){
+            query= {
+                email: email,
+            }
+        }
+        const booking = await bookingCollection.find(query).toArray();
+        res.send(booking)
     })
 
 

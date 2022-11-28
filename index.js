@@ -3,6 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const port = process.env.port || 5000
 require('dotenv').config();
+const stripe = require("stripe")('pk_test_51M95uqD5PGLT6zk7iJ0102GD6eG9uHthBJXh7QysQ3a5pgnkX3T3vFJInRhdr7CtiLUgUuKH9p1cgJYT1MlzT1Ju00v6OoNRey')
 const app = express();
 
 
@@ -15,7 +16,7 @@ app.use(express.json())
 //password = Ago3oXoqLFul9xkZ
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.6x8xxck.mongodb.net/?retryWrites=true&w=majority`;
 console.log(uri)
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -91,13 +92,59 @@ async function run() {
             if (email !== decodedEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
-
-
             const query = {email: email}
 
             const booking = await bookingCollection.find(query).toArray();
             res.send(booking)
         })
+
+        app.get('/bookings/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const booking = await bookingCollection.findOne(query);
+            res.send(booking)
+        })
+
+
+
+          // payment method added 
+          app.post("/create-payment-intent", async (req, res) => {
+            const booking = req.body;
+            const price = booking.price;
+            const amount = price * 100;
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: "usd",
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                ],
+            })
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+
+        })
+
+        // app.post('/payments', async (req, res) =>{
+        //     const payment = req.body;
+        //     const result = await paymentsCollection.insertOne(payment);
+        //     const id = payment.bookingId
+        //     const filter = {_id: ObjectId(id)}
+        //     const updatedDoc = {
+        //         $set: {
+        //             paid: true,
+        //             transactionId: payment.transactionId
+        //         }
+        //     }
+        //     const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc)
+        //     res.send(result);
+        // })
+
+
+
+
 
         // json web token
         app.get('/jwt', async(req, res) => {
@@ -133,6 +180,14 @@ async function run() {
             const user = await usersCollection.findOne(query);
             res.send({isAdmin: user?.role === 'admin'})
         })
+
+        app.delete('/users/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await usersCollection.deleteOne(query);
+            res.send(result)
+        })
+
         app.get('/users/seller/:email', async(req, res) => {
             const email = req.params.email;
             const query = {email}

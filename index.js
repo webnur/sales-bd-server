@@ -44,6 +44,8 @@ async function run() {
         const CategoriesCollection = client.db('salesBb').collection('categories');
         const bookingCollection = client.db('salesBb').collection('bookings');
         const usersCollection = client.db('salesBb').collection('users');
+        const subscriberCollection = client.db('salesBb').collection('subscriber');
+
 
         app.get('/products', async (req, res) => {
             const email = req.query.email;
@@ -195,6 +197,29 @@ async function run() {
             res.send({IsSeller: user?.role === 'seller'})
         })
 
+        // seller verified
+        app.put('/sellerverified', async(req, res) => {
+            const email = req.query.email;
+            const filter = { email};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set:{
+                    status: 'verified'
+                }
+            }
+
+            const result = await usersCollection.updateMany(filter, updatedDoc, options);
+            const result2 = await productsCollection.updateMany(filter, updatedDoc, options);
+            res.send({result, result2})
+
+        })
+
+
+        app.post('/subscriber', async(req, res) => {
+            const subscriber = req.body;
+            const result = await subscriberCollection.insertOne(subscriber)
+            res.send(result)
+        })
 
     }
     finally {

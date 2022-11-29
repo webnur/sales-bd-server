@@ -3,7 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const port = process.env.port || 5000
 require('dotenv').config();
-const stripe = require("stripe")('pk_test_51M95uqD5PGLT6zk7iJ0102GD6eG9uHthBJXh7QysQ3a5pgnkX3T3vFJInRhdr7CtiLUgUuKH9p1cgJYT1MlzT1Ju00v6OoNRey')
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 const app = express();
 
 
@@ -54,6 +54,33 @@ async function run() {
             res.send(products)
         });
 
+        app.get('/advertise/:advertise', async(req, res) => {
+            const advertise = req.params.advertise;
+            const query = {advertise: true};
+            const product = await productsCollection.find(query).toArray();
+            res.send(product)
+        })
+
+        app.delete('/product/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = productsCollection.deleteOne(query);
+            res.send(result)
+        })
+
+        app.put('/advertise/:id', async(req, res) => {
+            const id = req.params.id;
+            const filter = {_id: ObjectId(id)};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set:{
+                    advertise: true
+                }
+            }
+            const advertise = await productsCollection.updateOne(filter, updatedDoc, options);
+            res.send(advertise)
+        })
+
         app.post('/products', async (req, res) => {
             const product = req.body;
             const result = await productsCollection.insertOne(product);
@@ -75,7 +102,6 @@ async function run() {
         // booking collection area start
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
-            console.log(booking)
             const result = await bookingCollection.insertOne(booking);
             res.send(result)
         })

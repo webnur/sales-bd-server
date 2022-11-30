@@ -22,7 +22,6 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clu
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req,res, next){
-    console.log(req.headers.authorization);
     const authHeader = req.headers.authorization;
     if(!authHeader){
         return res.status(401).send('unauthorized access')
@@ -165,7 +164,6 @@ async function run() {
           // payment method added 
         app.post("/create-payment-intent", async(req, res) => {
             const booking = req.body;
-            console.log(booking)
             const price = booking.price;
             const amount = parseInt(price) * 100;
             const paymentIntent = await stripe.paymentIntents.create({
@@ -205,7 +203,6 @@ async function run() {
             const email = req.query.email;
             const query = {email: email};
             const user = await usersCollection.findOne(query);
-            console.log(user)
             if(user){
                 const token = jwt.sign({email}, process.env.JWT_TOKEN, {expiresIn: '1d'})
                 return res.send({accessToken: token})
@@ -260,7 +257,7 @@ async function run() {
                 }
             }
 
-            const result = await usersCollection.updateMany(filter, updatedDoc, options);
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
             const result2 = await productsCollection.updateMany(filter, updatedDoc, options);
             res.send({result, result2})
 

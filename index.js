@@ -46,6 +46,7 @@ async function run() {
         const usersCollection = client.db('salesBb').collection('users');
         const paymentsCollection = client.db('salesBb').collection('payments');
         const subscriberCollection = client.db('salesBb').collection('subscriber');
+        const wishlistCollection = client.db('salesBb').collection('wishlist');
 
 
         app.get('/products', async (req, res) => {
@@ -68,6 +69,7 @@ async function run() {
             const result = productsCollection.deleteOne(query);
             res.send(result)
         })
+
 
         app.put('/advertise/:id', async(req, res) => {
             const id = req.params.id;
@@ -99,6 +101,30 @@ async function run() {
             const category = await productsCollection.find(query).toArray()
             res.send(category)
         })
+
+
+        // wishList method
+        app.post('/wishlist', async(req, res) => {
+            const wishlist = req.body;
+            const result = await wishlistCollection.insertOne(wishlist);
+            res.send(result)
+        })
+
+        app.get('/wishlist/:email', async(req, res) => {
+            const email = req.params.email;
+            const query = {email: email};
+            const wishlist = await wishlistCollection.find(query).toArray();
+            res.send(wishlist)
+        });
+
+        app.delete('/wishlist/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await wishlistCollection.deleteOne(query);
+            res.send(result)
+        })
+        
+
 
         // booking collection area start
         app.post('/bookings', async (req, res) => {
